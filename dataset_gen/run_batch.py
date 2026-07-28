@@ -44,7 +44,7 @@ def render_one(args):
     try:
         result = subprocess.run(
             [BLENDER_BIN, "--background", "--python", BUILD_SCRIPT, "--", ops_path, sample_out],
-            timeout=120, capture_output=True, text=True
+            timeout=300, capture_output=True, text=True
         )
         if "DONE" in result.stdout:
             return idx, "ok"
