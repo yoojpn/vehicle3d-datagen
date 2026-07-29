@@ -35,25 +35,48 @@ def generate_ops(idx, templates, ops_dir, seed_base=0):
     return ops_path
 
 
-def render_one(args):
-    idx, ops_path, out_dir = args
-    sample_out = os.path.join(out_dir, f"{idx:06d}")
-    os.makedirs(sample_out, exist_ok=True)
-    if os.path.exists(os.path.join(sample_out, "mesh.glb")):
-        return idx, "skipped_exists"
+def render_chunk(args):
+    """1つのBlenderプロセス内で複数件をまとめて処理する(起動オーバーヘッド削減)"""
+    chunk_id, items, out_dir = args
+    manifest_lines = []
+    pending = []
+    for idx, ops_path in items:
+        sample_out = os.path.join(out_dir, f"{idx:06d}")
+        if os.path.exists(os.path.join(sample_out, "mesh.glb")):
+            continue
+        os.makedirs(sample_out, exist_ok=True)
+        manifest_lines.append(f"{ops_path}\t{sample_out}")
+        pending.append(idx)
+
+    if not manifest_lines:
+        return [(idx, "skipped_exists") for idx, _ in items]
+
+    manifest_path = os.path.join(out_dir, f"_manifest_{chunk_id}.manifest")
+    with open(manifest_path, "w") as f:
+        f.write("\n".join(manifest_lines))
+
     try:
+        # タイムアウトはチャンク内の件数に応じて確保(1件あたり最大60秒を見込む)
+        timeout_sec = max(300, len(manifest_lines) * 60)
         result = subprocess.run(
-            [BLENDER_BIN, "--background", "--python", BUILD_SCRIPT, "--", ops_path, sample_out],
-            timeout=300, capture_output=True, text=True
+            [BLENDER_BIN, "--background", "--python", BUILD_SCRIPT, "--", manifest_path],
+            timeout=timeout_sec, capture_output=True, text=True
         )
-        if "DONE" in result.stdout:
-            return idx, "ok"
-        else:
-            return idx, f"fail: {result.stdout[-300:]} {result.stderr[-300:]}"
+        os.remove(manifest_path)
+        done_count = result.stdout.count("DONE: ")
+        results = []
+        for idx in pending:
+            results.append((idx, "ok" if done_count > 0 else f"fail: {result.stdout[-300:]} {result.stderr[-300:]}"))
+        return results
     except subprocess.TimeoutExpired:
-        return idx, "timeout"
+        return [(idx, "timeout") for idx in pending]
     except Exception as e:
-        return idx, f"error: {e}"
+        return [(idx, f"error: {e}") for idx in pending]
+
+
+def chunked(lst, n):
+    for i in range(0, len(lst), n):
+        yield lst[i:i + n]
 
 
 def main():
@@ -61,6 +84,8 @@ def main():
     parser.add_argument("--start", type=int, default=0)
     parser.add_argument("--end", type=int, default=1000)
     parser.add_argument("--workers", type=int, default=8)
+    parser.add_argument("--chunk_size", type=int, default=20,
+                         help="1つのBlenderプロセスで連続処理する件数(起動オーバーヘッド削減)")
     parser.add_argument("--templates", type=str, default="structure_templates_300.json")
     parser.add_argument("--ops_dir", type=str, default="output/ops")
     parser.add_argument("--out", type=str, default="output/rendered")
@@ -73,32 +98,35 @@ def main():
     print(f"loaded {len(templates)} templates")
 
     # 操作列を先に全部生成(軽い処理なので逐次でOK)
-    tasks = []
+    items = []
     for idx in range(args.start, args.end):
         ops_path = generate_ops(idx, templates, args.ops_dir)
-        tasks.append((idx, ops_path, args.out))
-    print(f"prepared {len(tasks)} operation sequences")
+        items.append((idx, ops_path))
+    print(f"prepared {len(items)} operation sequences")
 
-    # レンダリングは重いので並列化
+    chunks = list(chunked(items, args.chunk_size))
+    tasks = [(i, chunk, args.out) for i, chunk in enumerate(chunks)]
+    print(f"split into {len(tasks)} chunks of up to {args.chunk_size} items each")
+
     import time
-    import sys
     start_time = time.time()
     ok_count, fail_count = 0, 0
-    total = len(tasks)
+    total = len(items)
+    done_items = 0
     with mp.Pool(args.workers) as pool:
-        for i, (idx, status) in enumerate(pool.imap_unordered(render_one, tasks)):
-            if status == "ok" or status == "skipped_exists":
-                ok_count += 1
-            else:
-                fail_count += 1
-                print(f"  [FAIL] idx={idx}: {status}", flush=True)
-
-            done = i + 1
+        for chunk_results in pool.imap_unordered(render_chunk, tasks):
+            for idx, status in chunk_results:
+                if status == "ok" or status == "skipped_exists":
+                    ok_count += 1
+                else:
+                    fail_count += 1
+                    print(f"  [FAIL] idx={idx}: {status}", flush=True)
+            done_items += len(chunk_results)
             elapsed = time.time() - start_time
-            rate = done / elapsed if elapsed > 0 else 0
-            remaining = (total - done) / rate if rate > 0 else float("inf")
+            rate = done_items / elapsed if elapsed > 0 else 0
+            remaining = (total - done_items) / rate if rate > 0 else float("inf")
             print(
-                f"progress: {done}/{total} ({done/total*100:.1f}%)  "
+                f"progress: {done_items}/{total} ({done_items/total*100:.1f}%)  "
                 f"ok={ok_count} fail={fail_count}  "
                 f"elapsed={elapsed:.0f}s  eta={remaining:.0f}s",
                 flush=True

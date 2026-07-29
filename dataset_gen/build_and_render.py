@@ -461,15 +461,8 @@ def render_views(cam, output_dir, obj, num_views=6, elevation=25.0):
         bpy.ops.render.render(write_still=True)
 
 
-def main():
-    argv = sys.argv
-    argv = argv[argv.index("--") + 1:]
-    ops_path = argv[0]
-    output_dir = argv[1]
-
+def process_one(ops_path, output_dir):
     os.makedirs(output_dir, exist_ok=True)
-    enable_gpu_rendering()
-
     with open(ops_path) as f:
         data = json.load(f)
     ops = data["operations"]
@@ -479,8 +472,8 @@ def main():
     joined = join_all_meshes()
 
     if joined is None:
-        print("ERROR: no mesh produced")
-        return
+        print(f"ERROR: no mesh produced for {ops_path}")
+        return False
 
     cam = setup_camera_and_light()
     render_views(cam, output_dir, joined, num_views=6)
@@ -491,6 +484,35 @@ def main():
     bpy.ops.export_scene.gltf(filepath=export_path, use_selection=True)
 
     print(f"DONE: {output_dir}")
+    return True
+
+
+def main():
+    argv = sys.argv
+    argv = argv[argv.index("--") + 1:]
+
+    enable_gpu_rendering()
+
+    # マニフェストファイル(1行ごとに "ops_path\toutput_dir")を渡すことで
+    # 1つのBlenderプロセス内で複数件を連続処理し、起動オーバーヘッドを削減する
+    if len(argv) == 1 and argv[0].endswith(".manifest"):
+        manifest_path = argv[0]
+        with open(manifest_path) as f:
+            lines = [l.strip().split("\t") for l in f if l.strip()]
+        ok, fail = 0, 0
+        for ops_path, output_dir in lines:
+            try:
+                success = process_one(ops_path, output_dir)
+                ok += 1 if success else 0
+                fail += 0 if success else 1
+            except Exception as e:
+                print(f"ERROR processing {ops_path}: {e}")
+                fail += 1
+        print(f"BATCH_DONE: ok={ok} fail={fail} total={len(lines)}")
+    else:
+        # 従来の単一ファイル呼び出しにも後方互換で対応
+        ops_path, output_dir = argv[0], argv[1]
+        process_one(ops_path, output_dir)
 
 
 main()
