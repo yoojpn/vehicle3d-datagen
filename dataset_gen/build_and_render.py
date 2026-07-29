@@ -14,6 +14,29 @@ import os
 import mathutils
 
 
+def enable_gpu_rendering():
+    """EEVEEがGPUを使うよう明示的に有効化する。
+    デフォルトではheadless環境でCPUフォールバックしてしまうため必須。"""
+    prefs = bpy.context.preferences
+    cprefs = prefs.addons['cycles'].preferences if 'cycles' in prefs.addons else None
+
+    # Cyclesの設定(EEVEE Nextでも内部的にデバイス選択を参照するため設定しておく)
+    if cprefs is not None:
+        try:
+            cprefs.compute_device_type = 'CUDA'
+            cprefs.get_devices()
+            for device in cprefs.devices:
+                device.use = True
+                print(f"GPU device enabled: {device.name} ({device.type})")
+        except Exception as e:
+            print(f"WARNING: could not enable CUDA devices: {e}")
+
+    # シーン側もGPU使用に設定
+    scene = bpy.context.scene
+    if hasattr(scene.cycles, "device"):
+        scene.cycles.device = 'GPU'
+
+
 def clear_scene():
     bpy.ops.object.select_all(action='SELECT')
     bpy.ops.object.delete(use_global=False)
@@ -415,11 +438,12 @@ def compute_auto_distance(obj, base_fov=40.0, margin=1.6):
 
 def render_views(cam, output_dir, obj, num_views=6, elevation=25.0):
     scene = bpy.context.scene
-    scene.render.engine = 'BLENDER_EEVEE_NEXT'
+    scene.render.engine = 'CYCLES'
+    scene.cycles.samples = 16
+    scene.cycles.use_denoising = True
     scene.render.resolution_x = 256
     scene.render.resolution_y = 256
     scene.render.film_transparent = False
-    scene.eevee.taa_render_samples = 8
 
     distance, center = compute_auto_distance(obj)
 
@@ -444,6 +468,7 @@ def main():
     output_dir = argv[1]
 
     os.makedirs(output_dir, exist_ok=True)
+    enable_gpu_rendering()
 
     with open(ops_path) as f:
         data = json.load(f)
