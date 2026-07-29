@@ -80,18 +80,31 @@ def main():
     print(f"prepared {len(tasks)} operation sequences")
 
     # レンダリングは重いので並列化
+    import time
+    import sys
+    start_time = time.time()
     ok_count, fail_count = 0, 0
+    total = len(tasks)
     with mp.Pool(args.workers) as pool:
         for i, (idx, status) in enumerate(pool.imap_unordered(render_one, tasks)):
             if status == "ok" or status == "skipped_exists":
                 ok_count += 1
             else:
                 fail_count += 1
-                print(f"  [FAIL] idx={idx}: {status}")
-            if (i + 1) % 100 == 0:
-                print(f"progress: {i+1}/{len(tasks)}  ok={ok_count} fail={fail_count}")
+                print(f"  [FAIL] idx={idx}: {status}", flush=True)
 
-    print(f"DONE. ok={ok_count} fail={fail_count} total={len(tasks)}")
+            done = i + 1
+            elapsed = time.time() - start_time
+            rate = done / elapsed if elapsed > 0 else 0
+            remaining = (total - done) / rate if rate > 0 else float("inf")
+            print(
+                f"progress: {done}/{total} ({done/total*100:.1f}%)  "
+                f"ok={ok_count} fail={fail_count}  "
+                f"elapsed={elapsed:.0f}s  eta={remaining:.0f}s",
+                flush=True
+            )
+
+    print(f"DONE. ok={ok_count} fail={fail_count} total={total}")
 
 
 if __name__ == "__main__":
