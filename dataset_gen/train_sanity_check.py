@@ -123,7 +123,10 @@ def main():
     parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--lr", type=float, default=3e-4)
     parser.add_argument("--max_len", type=int, default=256)
+    parser.add_argument("--out_dir", type=str, default="/kaggle/working/train_output")
     args = parser.parse_args()
+
+    os.makedirs(args.out_dir, exist_ok=True)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"device: {device}")
@@ -137,6 +140,9 @@ def main():
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr)
     pad_id = TOKEN_TO_ID["<pad>"]
     criterion = nn.CrossEntropyLoss(ignore_index=pad_id)
+
+    log_path = os.path.join(args.out_dir, "loss_log.txt")
+    loss_history = []
 
     for epoch in range(args.epochs):
         model.train()
@@ -161,7 +167,13 @@ def main():
 
         avg_loss = total_loss / max(num_batches, 1)
         print(f"epoch {epoch+1}/{args.epochs}  loss={avg_loss:.4f}", flush=True)
+        loss_history.append(avg_loss)
+        with open(log_path, "a") as f:
+            f.write(f"{epoch+1}\t{avg_loss:.6f}\n")
 
+    model_path = os.path.join(args.out_dir, "model_sanity_check.pt")
+    torch.save(model.state_dict(), model_path)
+    print(f"model saved to {model_path}")
     print("TRAINING_DONE")
 
 
