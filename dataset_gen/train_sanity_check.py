@@ -144,11 +144,16 @@ def main():
     log_path = os.path.join(args.out_dir, "loss_log.txt")
     loss_history = []
 
+    import time
+    train_start = time.time()
+    total_batches_all_epochs = len(loader) * args.epochs
+    batches_done_total = 0
+
     for epoch in range(args.epochs):
         model.train()
         total_loss = 0.0
         num_batches = 0
-        for images, input_ids in loader:
+        for batch_i, (images, input_ids) in enumerate(loader):
             images, input_ids = images.to(device), input_ids.to(device)
 
             # teacher forcing: 入力は最後を除く、正解は最初を除く(1つずらす)
@@ -164,9 +169,19 @@ def main():
 
             total_loss += loss.item()
             num_batches += 1
+            batches_done_total += 1
+
+            elapsed = time.time() - train_start
+            rate = batches_done_total / elapsed if elapsed > 0 else 0
+            remaining = (total_batches_all_epochs - batches_done_total) / rate if rate > 0 else float("inf")
+            print(
+                f"epoch {epoch+1}/{args.epochs}  batch {batch_i+1}/{len(loader)}  "
+                f"batch_loss={loss.item():.4f}  elapsed={elapsed:.0f}s  eta={remaining:.0f}s",
+                flush=True
+            )
 
         avg_loss = total_loss / max(num_batches, 1)
-        print(f"epoch {epoch+1}/{args.epochs}  loss={avg_loss:.4f}", flush=True)
+        print(f"=== epoch {epoch+1}/{args.epochs} DONE  avg_loss={avg_loss:.4f} ===", flush=True)
         loss_history.append(avg_loss)
         with open(log_path, "a") as f:
             f.write(f"{epoch+1}\t{avg_loss:.6f}\n")
