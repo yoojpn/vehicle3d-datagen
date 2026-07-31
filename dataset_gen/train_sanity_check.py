@@ -124,6 +124,8 @@ def main():
     parser.add_argument("--lr", type=float, default=3e-4)
     parser.add_argument("--max_len", type=int, default=256)
     parser.add_argument("--out_dir", type=str, default="/kaggle/working/train_output")
+    parser.add_argument("--val_ratio", type=float, default=0.1,
+                         help="検証用に取り分ける割合(この分は学習に一切使わない)")
     args = parser.parse_args()
 
     os.makedirs(args.out_dir, exist_ok=True)
@@ -131,8 +133,17 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"device: {device}")
 
-    dataset = VehicleDataset(args.data_dir, args.ops_dir, max_len=args.max_len)
-    loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True, num_workers=2)
+    full_dataset = VehicleDataset(args.data_dir, args.ops_dir, max_len=args.max_len)
+    val_size = int(len(full_dataset) * args.val_ratio)
+    train_size = len(full_dataset) - val_size
+    generator = torch.Generator().manual_seed(42)  # 毎回同じ分割になるよう固定
+    train_dataset, val_dataset = torch.utils.data.random_split(
+        full_dataset, [train_size, val_size], generator=generator
+    )
+    print(f"train: {train_size} samples, val: {val_size} samples (held out, never trained on)")
+
+    loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=2)
+    val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=2)
 
     model = FullModel(VOCAB_SIZE, max_len=args.max_len).to(device)
     print(f"model parameters: {count_parameters(model):,}")
@@ -181,10 +192,26 @@ def main():
             )
 
         avg_loss = total_loss / max(num_batches, 1)
-        print(f"=== epoch {epoch+1}/{args.epochs} DONE  avg_loss={avg_loss:.4f} ===", flush=True)
-        loss_history.append(avg_loss)
+
+        # 検証データでのloss(学習に一切使っていないデータ)
+        model.eval()
+        val_total_loss = 0.0
+        val_batches = 0
+        with torch.no_grad():
+            for images, input_ids in val_loader:
+                images, input_ids = images.to(device), input_ids.to(device)
+                decoder_input = input_ids[:, :-1]
+                target = input_ids[:, 1:]
+                logits = model(images, decoder_input)
+                v_loss = criterion(logits.reshape(-1, VOCAB_SIZE), target.reshape(-1))
+                val_total_loss += v_loss.item()
+                val_batches += 1
+        val_avg_loss = val_total_loss / max(val_batches, 1)
+
+        print(f"=== epoch {epoch+1}/{args.epochs} DONE  train_loss={avg_loss:.4f}  val_loss={val_avg_loss:.4f} ===", flush=True)
+        loss_history.append((avg_loss, val_avg_loss))
         with open(log_path, "a") as f:
-            f.write(f"{epoch+1}\t{avg_loss:.6f}\n")
+            f.write(f"{epoch+1}\t{avg_loss:.6f}\t{val_avg_loss:.6f}\n")
 
     model_path = os.path.join(args.out_dir, "model_sanity_check.pt")
     torch.save(model.state_dict(), model_path)
