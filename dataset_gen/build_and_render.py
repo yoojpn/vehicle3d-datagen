@@ -439,7 +439,9 @@ def compute_auto_distance(obj, base_fov=40.0, margin=1.6):
 def render_views(cam, output_dir, obj, num_views=6, elevation=25.0):
     scene = bpy.context.scene
     scene.render.engine = 'CYCLES'
-    scene.cycles.samples = 16
+    scene.cycles.samples = 8
+    scene.cycles.use_adaptive_sampling = True
+    scene.cycles.adaptive_threshold = 0.05
     scene.cycles.use_denoising = True
     scene.render.resolution_x = 256
     scene.render.resolution_y = 256
