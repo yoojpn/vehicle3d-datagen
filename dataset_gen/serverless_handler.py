@@ -34,6 +34,37 @@ def handler(job):
             "blender_stderr": blender_gpu_check.stderr,
         }
 
+    # デバッグモード2: 1件のレンダリングを詳細ログ付きで実行
+    if job_input.get("debug_single_render"):
+        import time
+        t0 = time.time()
+        os.environ["BLENDER_BIN"] = BLENDER_BIN
+        ops_gen = subprocess.run(
+            ["python3", "-c",
+             f"import sys; sys.path.insert(0,'{REPO_DIR}/dataset_gen'); "
+             "from op_sampler_v5 import load_templates, instantiate_template; "
+             "import json; "
+             f"t = load_templates('{REPO_DIR}/dataset_gen/structure_templates_300_v2.json'); "
+             "r = instantiate_template(t[5], seed=1); "
+             "json.dump(r, open('/tmp/debug_ops.json','w'))"],
+            capture_output=True, text=True, timeout=30
+        )
+        t1 = time.time()
+        render = subprocess.run(
+            [BLENDER_BIN, "--background", "--python", f"{REPO_DIR}/dataset_gen/build_and_render.py",
+             "--", "/tmp/debug_ops.json", "/tmp/debug_out"],
+            capture_output=True, text=True, timeout=120
+        )
+        t2 = time.time()
+        return {
+            "ops_gen_time": t1 - t0,
+            "ops_gen_stderr": ops_gen.stderr[-500:],
+            "render_time": t2 - t1,
+            "render_stdout": render.stdout[-2000:],
+            "render_stderr": render.stderr[-1000:],
+            "render_returncode": render.returncode,
+        }
+
     start_idx = job_input.get("start", 0)
     end_idx = job_input.get("end", start_idx + 20)
     templates_path = job_input.get(
