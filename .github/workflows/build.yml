@@ -22,9 +22,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Build and push (datagen)
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: ./Dockerfile
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/vehicle3d-datagen:latest
+
+      - name: Build and push (serverless)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.serverless
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/vehicle3d-datagen-serverless:latest
