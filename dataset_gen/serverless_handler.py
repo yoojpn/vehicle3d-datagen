@@ -65,6 +65,50 @@ def handler(job):
             "render_returncode": render.returncode,
         }
 
+    # デバッグモード3: コンテナ環境の詳細確認
+    if job_input.get("debug_env"):
+        checks = {}
+        checks["ls_dev"] = subprocess.run(["ls", "-la", "/dev/"], capture_output=True, text=True).stdout
+        checks["nvidia_devices"] = subprocess.run(
+            ["bash", "-c", "ls -la /dev/nvidia* 2>&1"], capture_output=True, text=True
+        ).stdout
+        checks["env_nvidia"] = subprocess.run(
+            ["bash", "-c", "env | grep -i nvidia"], capture_output=True, text=True
+        ).stdout
+        checks["cuda_visible"] = subprocess.run(
+            ["bash", "-c", "echo $CUDA_VISIBLE_DEVICES"], capture_output=True, text=True
+        ).stdout
+        checks["nvidia_smi_l"] = subprocess.run(
+            ["bash", "-c", "nvidia-smi -L 2>&1"], capture_output=True, text=True
+        ).stdout
+        # 実際に最小限のCyclesレンダーを1枚だけ試す(タイムアウトを短く区切って確認)
+        import time
+        t0 = time.time()
+        try:
+            minimal = subprocess.run(
+                [BLENDER_BIN, "--background", "--python-expr",
+                 "import bpy; bpy.ops.mesh.primitive_cube_add(); "
+                 "s=bpy.context.scene; s.render.engine='CYCLES'; s.cycles.device='GPU'; "
+                 "s.render.resolution_x=64; s.render.resolution_y=64; s.cycles.samples=4; "
+                 "s.render.filepath='/tmp/mini.png'; "
+                 "prefs = bpy.context.preferences.addons['cycles'].preferences; "
+                 "prefs.compute_device_type='CUDA'; prefs.get_devices(); "
+                 "[setattr(d,'use',True) for d in prefs.devices]; "
+                 "print('RENDER_START'); "
+                 "bpy.ops.render.render(write_still=True); "
+                 "print('RENDER_DONE')"],
+                capture_output=True, text=True, timeout=60
+            )
+            checks["mini_render_stdout"] = minimal.stdout
+            checks["mini_render_stderr"] = minimal.stderr
+            checks["mini_render_time"] = time.time() - t0
+        except subprocess.TimeoutExpired as e:
+            checks["mini_render_timeout"] = True
+            checks["mini_render_stdout_partial"] = str(e.stdout)[-1500:] if e.stdout else None
+            checks["mini_render_stderr_partial"] = str(e.stderr)[-1500:] if e.stderr else None
+            checks["mini_render_time"] = time.time() - t0
+        return checks
+
     start_idx = job_input.get("start", 0)
     end_idx = job_input.get("end", start_idx + 20)
     templates_path = job_input.get(
