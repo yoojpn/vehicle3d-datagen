@@ -10,7 +10,7 @@ import subprocess
 import os
 import json
 
-BLENDER_BIN = "/opt/blender-4.2.5-linux-x64/blender"
+BLENDER_BIN = "/opt/blender-5.2.0-linux-x64/blender"
 REPO_DIR = "/workspace/repo"
 
 

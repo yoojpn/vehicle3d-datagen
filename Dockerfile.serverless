@@ -16,10 +16,10 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-RUN wget -q https://download.blender.org/release/Blender4.2/blender-4.2.5-linux-x64.tar.xz -O /tmp/blender.tar.xz \
+RUN wget -q https://download.blender.org/release/Blender5.2/blender-5.2.0-linux-x64.tar.xz -O /tmp/blender.tar.xz \
     && tar xf /tmp/blender.tar.xz -C /opt \
     && rm /tmp/blender.tar.xz
-ENV PATH="/opt/blender-4.2.5-linux-x64:${PATH}"
+ENV PATH="/opt/blender-5.2.0-linux-x64:${PATH}"
 
 RUN pip3 install --no-cache-dir runpod trimesh numpy
 
