@@ -16,6 +16,24 @@ REPO_DIR = "/workspace/repo"
 
 def handler(job):
     job_input = job["input"]
+
+    # デバッグモード: GPU認識状況だけを確認する
+    if job_input.get("debug_gpu"):
+        nvidia_smi = subprocess.run(["nvidia-smi"], capture_output=True, text=True)
+        blender_gpu_check = subprocess.run(
+            [BLENDER_BIN, "--background", "--python-expr",
+             "import bpy; prefs = bpy.context.preferences.addons['cycles'].preferences; "
+             "prefs.compute_device_type = 'CUDA'; prefs.get_devices(); "
+             "print('DEVICES:', [(d.name, d.type, d.use) for d in prefs.devices])"],
+            capture_output=True, text=True, timeout=60
+        )
+        return {
+            "nvidia_smi_stdout": nvidia_smi.stdout,
+            "nvidia_smi_stderr": nvidia_smi.stderr,
+            "blender_stdout": blender_gpu_check.stdout,
+            "blender_stderr": blender_gpu_check.stderr,
+        }
+
     start_idx = job_input.get("start", 0)
     end_idx = job_input.get("end", start_idx + 20)
     templates_path = job_input.get(
