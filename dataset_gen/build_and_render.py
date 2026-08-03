@@ -444,6 +444,7 @@ def render_views(cam, output_dir, obj, num_views=6, elevation=25.0):
     scene.render.resolution_x = 128
     scene.render.resolution_y = 128
     scene.render.film_transparent = False
+    scene.render.use_persistent_data = True
 
     distance, center = compute_auto_distance(obj)
 
