@@ -515,4 +515,5 @@ def main():
         process_one(ops_path, output_dir)
 
 
-main()
+if __name__ == "__main__":
+    main()
