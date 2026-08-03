@@ -441,8 +441,8 @@ def render_views(cam, output_dir, obj, num_views=6, elevation=25.0):
     scene.render.engine = 'CYCLES'
     scene.cycles.samples = 8
     scene.cycles.use_denoising = True
-    scene.render.resolution_x = 256
-    scene.render.resolution_y = 256
+    scene.render.resolution_x = 128
+    scene.render.resolution_y = 128
     scene.render.film_transparent = False
 
     distance, center = compute_auto_distance(obj)
