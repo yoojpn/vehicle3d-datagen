@@ -109,6 +109,48 @@ def handler(job):
             checks["mini_render_time"] = time.time() - t0
         return checks
 
+    # デバッグモード4: シーン構築とレンダリングの時間内訳を計測
+    if job_input.get("debug_timing"):
+        timing_script = f"""
+import sys, time, json
+sys.path.insert(0, '{REPO_DIR}/dataset_gen')
+from op_sampler_v5 import load_templates, instantiate_template
+import bpy
+from build_and_render import (clear_scene, execute_operations, join_all_meshes,
+    setup_camera_and_light, render_views, enable_gpu_rendering)
+
+t0 = time.time()
+enable_gpu_rendering()
+t1 = time.time()
+
+templates = load_templates('{REPO_DIR}/dataset_gen/structure_templates_300_v2.json')
+ops_data = instantiate_template(templates[5], seed=1)
+t2 = time.time()
+
+clear_scene()
+execute_operations(ops_data['operations'])
+joined = join_all_meshes()
+t3 = time.time()
+
+cam = setup_camera_and_light()
+render_views(cam, '/tmp/timing_test', joined, num_views=6)
+t4 = time.time()
+
+result = {{
+    'gpu_setup': t1 - t0,
+    'ops_generation': t2 - t1,
+    'scene_construction': t3 - t2,
+    'rendering_6views': t4 - t3,
+    'total': t4 - t0,
+}}
+print('TIMING_RESULT:', json.dumps(result))
+"""
+        proc = subprocess.run(
+            [BLENDER_BIN, "--background", "--python-expr", timing_script],
+            capture_output=True, text=True, timeout=120
+        )
+        return {"stdout": proc.stdout, "stderr": proc.stderr[-1500:]}
+
     start_idx = job_input.get("start", 0)
     end_idx = job_input.get("end", start_idx + 20)
     templates_path = job_input.get(
