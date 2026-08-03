@@ -156,7 +156,7 @@ print('TIMING_RESULT:', json.dumps(result))
     templates_path = job_input.get(
         "templates", f"{REPO_DIR}/dataset_gen/structure_templates_300_v2.json"
     )
-    out_dir = job_input.get("out_dir", "/workspace/output")
+    out_dir = job_input.get("out_dir", "/runpod-volume/output")
 
     os.environ["BLENDER_BIN"] = BLENDER_BIN
     result = subprocess.run(
