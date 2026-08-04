@@ -38,9 +38,12 @@ echo "attempting self-terminate: POD_ID=${RUNPOD_POD_ID}" >> /tmp/status.log
 
 TERMINATE_RESULT="not_attempted"
 if [ -n "${RUNPOD_API_KEY}" ] && [ -n "${RUNPOD_POD_ID}" ]; then
+  cat > /tmp/terminate_query.json << EOF
+{"query": "mutation { podTerminate(input: {podId: \"${RUNPOD_POD_ID}\"}) }"}
+EOF
   TERMINATE_RESULT=$(curl -s -m 20 -X POST "https://api.runpod.io/graphql?api_key=${RUNPOD_API_KEY}" \
     -H "Content-Type: application/json" \
-    -d "{\"query\": \"mutation { podTerminate(input: {podId: \\\"${RUNPOD_POD_ID}\\\"}) }\"}" 2>&1)
+    --data @/tmp/terminate_query.json 2>&1)
 else
   TERMINATE_RESULT="missing_env_vars"
 fi
