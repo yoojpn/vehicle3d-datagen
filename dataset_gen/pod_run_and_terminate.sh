@@ -34,13 +34,25 @@ if [ -n "${GITHUB_TOKEN}" ]; then
 fi
 
 # terminateは必ず実行する(push成否に関わらず)
-echo "attempting self-terminate: POD_ID=${RUNPOD_POD_ID}"
+echo "attempting self-terminate: POD_ID=${RUNPOD_POD_ID}" >> /tmp/status.log
+
+TERMINATE_RESULT="not_attempted"
 if [ -n "${RUNPOD_API_KEY}" ] && [ -n "${RUNPOD_POD_ID}" ]; then
-  curl -s -m 20 -X POST "https://api.runpod.io/graphql?api_key=${RUNPOD_API_KEY}" \
+  TERMINATE_RESULT=$(curl -s -m 20 -X POST "https://api.runpod.io/graphql?api_key=${RUNPOD_API_KEY}" \
     -H "Content-Type: application/json" \
-    -d "{\"query\": \"mutation { podTerminate(input: {podId: \\\"${RUNPOD_POD_ID}\\\"}) }\"}"
+    -d "{\"query\": \"mutation { podTerminate(input: {podId: \\\"${RUNPOD_POD_ID}\\\"}) }\"}" 2>&1)
 else
-  echo "WARNING: cannot self-terminate, missing RUNPOD_API_KEY or RUNPOD_POD_ID"
+  TERMINATE_RESULT="missing_env_vars"
+fi
+echo "terminate_result=${TERMINATE_RESULT}" >> /tmp/status.log
+
+# terminate結果を別ファイルとして即座にpush(こちらが失敗の原因調査用)
+if [ -n "${GITHUB_TOKEN}" ]; then
+  echo "${TERMINATE_RESULT}" > /workspace/repo/pod_terminate_result.log
+  cd /workspace/repo
+  git add pod_terminate_result.log
+  git commit -m "terminate result $(date +%s)"
+  timeout 20 git push origin main
 fi
 
 
