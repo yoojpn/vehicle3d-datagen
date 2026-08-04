@@ -30,13 +30,24 @@ if [ -n "${GITHUB_TOKEN}" ]; then
   git push origin main || true
 fi
 
-echo "=== self-terminating ==="
+echo "=== self-terminating ===" >> /tmp/status.log
+echo "DEBUG: RUNPOD_API_KEY set=$([ -n "${RUNPOD_API_KEY}" ] && echo yes || echo no)" >> /tmp/status.log
+echo "DEBUG: RUNPOD_POD_ID=${RUNPOD_POD_ID}" >> /tmp/status.log
 
 if [ -n "${RUNPOD_API_KEY}" ] && [ -n "${RUNPOD_POD_ID}" ]; then
-  curl -s -X POST "https://api.runpod.io/graphql?api_key=${RUNPOD_API_KEY}" \
+  TERMINATE_RESULT=$(curl -s -X POST "https://api.runpod.io/graphql?api_key=${RUNPOD_API_KEY}" \
     -H "Content-Type: application/json" \
-    -d "{\"query\": \"mutation { podTerminate(input: {podId: \\\"${RUNPOD_POD_ID}\\\"}) }\"}"
+    -d "{\"query\": \"mutation { podTerminate(input: {podId: \\\"${RUNPOD_POD_ID}\\\"}) }\"}")
+  echo "DEBUG: terminate result: ${TERMINATE_RESULT}" >> /tmp/status.log
 else
-  echo "WARNING: cannot self-terminate, missing RUNPOD_API_KEY or RUNPOD_POD_ID"
+  echo "WARNING: cannot self-terminate, missing RUNPOD_API_KEY or RUNPOD_POD_ID" >> /tmp/status.log
+fi
+
+# terminate結果を含めて再度push
+if [ -n "${GITHUB_TOKEN}" ]; then
+  cp /tmp/status.log /workspace/repo/pod_status.log
+  git add pod_status.log
+  git commit -m "pod run status (final) $(date +%s)" || true
+  git push origin main || true
 fi
 
