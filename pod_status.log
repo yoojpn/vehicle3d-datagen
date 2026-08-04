@@ -1,8 +1,8 @@
-=== START: 10 samples ===
+=== START: 5 samples ===
 loaded 188 templates
-prepared 10 operation sequences
+prepared 5 operation sequences
 split into 1 chunks of up to 20 items each
-progress: 10/10 (100.0%)  ok=10 fail=0  elapsed=9s  eta=0s
-DONE. ok=10 fail=0 total=10
+progress: 5/5 (100.0%)  ok=5 fail=0  elapsed=6s  eta=0s
+DONE. ok=5 fail=0 total=5
 === DONE ===
 REACHED_POST_PROCESSING
