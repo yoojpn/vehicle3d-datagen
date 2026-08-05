@@ -1,0 +1,8 @@
+=== BUDGET-LIMITED RUN: time_limit=120s ===
+start=1785932552
+loaded 188 templates
+prepared 200000 operation sequences
+split into 10000 chunks of up to 20 items each
+=== TIME LIMIT REACHED OR RUN COMPLETED ===
+end=1785932672
+completed_count=20
