@@ -164,7 +164,7 @@ print('TIMING_RESULT:', json.dumps(result))
             "python3", f"{REPO_DIR}/dataset_gen/run_batch.py",
             "--start", str(start_idx), "--end", str(end_idx),
             "--workers", "1",  # Serverless側は1ジョブ=1ワーカーなので内部並列は不要
-            "--chunk_size", str(end_idx - start_idx),
+            "--chunk_size", "50",
             "--templates", templates_path,
             "--ops_dir", f"{out_dir}/ops",
             "--out", f"{out_dir}/rendered",

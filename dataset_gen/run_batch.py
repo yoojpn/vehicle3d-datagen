@@ -57,7 +57,10 @@ def render_chunk(args):
 
     try:
         # タイムアウトはチャンク内の件数に応じて確保(1件あたり最大60秒を見込む)
-        timeout_sec = max(300, len(manifest_lines) * 60)
+        # 実測(Persistent Data有効時)は1件あたり約0.5秒。余裕を見て1件2秒で計算し、
+        # 上限は30分(1800秒)に固定する。以前は1件60秒で計算しており、
+        # 大きなチャンクでは実質無限のタイムアウトになっていた。
+        timeout_sec = min(1800, max(60, len(manifest_lines) * 2))
         result = subprocess.run(
             [BLENDER_BIN, "--background", "--python", BUILD_SCRIPT, "--", manifest_path],
             timeout=timeout_sec, capture_output=True, text=True

@@ -16,7 +16,7 @@ cd /workspace/repo
 
 echo "=== START: ${NUM_SAMPLES} samples (pod=${POD_TAG}, start_idx=${START_IDX}) ===" > /tmp/status.log
 
-python3 dataset_gen/run_batch.py \
+timeout 3600 python3 dataset_gen/run_batch.py \
   --start "${START_IDX}" --end "$((START_IDX + NUM_SAMPLES))" \
   --workers "${WORKERS}" \
   --templates dataset_gen/structure_templates_300_v2.json \
