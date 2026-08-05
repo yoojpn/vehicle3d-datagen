@@ -26,7 +26,7 @@ ENV PATH="/opt/blender-5.2.0-linux-x64:${PATH}"
 RUN pip3 install --no-cache-dir runpod trimesh numpy
 
 RUN git clone https://github.com/yoojpn/vehicle3d-datagen.git /workspace/repo
-RUN chmod +x /workspace/repo/dataset_gen/pod_run_and_terminate.sh /workspace/repo/dataset_gen/minimal_terminate_test.sh /workspace/repo/dataset_gen/timing_diagnostic.sh /workspace/repo/dataset_gen/isolated_render_test.sh
+RUN chmod +x /workspace/repo/dataset_gen/pod_run_and_terminate.sh /workspace/repo/dataset_gen/minimal_terminate_test.sh /workspace/repo/dataset_gen/timing_diagnostic.sh /workspace/repo/dataset_gen/isolated_render_test.sh /workspace/repo/dataset_gen/budget_limited_run.sh
 
 WORKDIR /workspace
 COPY dataset_gen/serverless_handler.py /workspace/repo/dataset_gen/serverless_handler.py
