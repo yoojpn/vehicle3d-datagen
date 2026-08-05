@@ -1,0 +1,14 @@
+=== ISOLATED TEST START: 100 samples ===
+start=1785912995
+loaded 188 templates
+prepared 100 operation sequences
+split into 5 chunks of up to 20 items each
+progress: 20/100 (20.0%)  ok=20 fail=0  elapsed=25s  eta=100s
+progress: 40/100 (40.0%)  ok=40 fail=0  elapsed=48s  eta=71s
+progress: 60/100 (60.0%)  ok=60 fail=0  elapsed=71s  eta=47s
+progress: 80/100 (80.0%)  ok=80 fail=0  elapsed=96s  eta=24s
+progress: 100/100 (100.0%)  ok=100 fail=0  elapsed=118s  eta=0s
+DONE. ok=100 fail=0 total=100
+=== ISOLATED TEST DONE ===
+end=1785913114
+push_done=1785913116
