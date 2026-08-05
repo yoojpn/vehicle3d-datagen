@@ -1,0 +1,51 @@
+=== TIMING DIAGNOSTIC (no blender render) ===
+start_time=1785911266
+checking repo state...
+total 20
+drwxr-xr-x 1 root root   33 Aug  5 06:20 .
+drwxr-xr-x 1 root root   26 Aug  5 06:20 ..
+drwxr-xr-x 8 root root 4096 Aug  5 06:20 .git
+drwxr-xr-x 3 root root   31 Aug  5 06:20 .github
+-rw-r--r-- 1 root root 1220 Aug  5 06:20 Dockerfile
+-rw-r--r-- 1 root root 1086 Aug  5 06:20 Dockerfile.serverless
+-rw-r--r-- 1 root root 2354 Aug  5 06:20 colab_one_click.ipynb
+drwxr-xr-x 1 root root   43 Aug  5 06:20 dataset_gen
+-rw-r--r-- 1 root root  239 Aug  5 06:20 pod_status.log
+python3 check:
+Python 3.10.12
+blender check:
+Blender 5.2.0 LTS
+	build date: 2026-07-14
+	build time: 01:32:04
+	build commit date: 2026-07-13
+	build commit time: 15:20
+	build hash: fbe6228777e7
+	build branch: blender-v5.2-release
+	build platform: Linux
+	build type: Release
+	build c flags:  -Wall -Werror=implicit-function-declaration -Wstrict-prototypes -Werror=return-type -Werror=vla -Wmissing-prototypes -Wno-char-subscripts -Wno-unknown-pragmas -Wpointer-arith -Wunused-parameter -Wwrite-strings -Wlogical-op -Wundef -Winit-self -Wmissing-include-dirs -Wno-div-by-zero -Wtype-limits -Wformat-signedness -Wrestrict -Wno-stringop-overread -Wno-stringop-overflow -Wnonnull -Wabsolute-value -Wuninitialized -Wredundant-decls -Wshadow -Wimplicit-fallthrough=5 -Wno-error=unused-but-set-variable  -march=x86-64-v2 -std=gnu11 -pipe -fPIC -funsigned-char -fno-strict-aliasing -ffp-contract=off  
+	build c++ flags:  -Wuninitialized -Wredundant-decls -Wall -Wno-invalid-offsetof -Wno-sign-compare -Wlogical-op -Winit-self -Wmissing-include-dirs -Wno-div-by-zero -Wtype-limits -Werror=return-type -Wno-char-subscripts -Wno-unknown-pragmas -Wpointer-arith -Wunused-parameter -Wwrite-strings -Wundef -Wcomma-subscript -Wformat-signedness -Wrestrict -Wno-suggest-override -Wuninitialized -Wno-stringop-overread -Wno-stringop-overflow -Wimplicit-fallthrough=5 -Wundef -Wmissing-declarations  -march=x86-64-v2 -pipe -fPIC -funsigned-char -fno-strict-aliasing -ffp-contract=off  
+	build link flags: 
+	build system: CMake
+nvidia-smi check:
+Wed Aug  5 06:27:46 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.159.03             Driver Version: 580.159.03     CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 3090        On  |   00000000:06:00.0 Off |                  N/A |
+|  0%   27C    P8             11W /  350W |       1MiB /  24576MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+end_time=1785911266
