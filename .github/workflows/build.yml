@@ -37,3 +37,11 @@ jobs:
           file: ./Dockerfile.serverless
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/vehicle3d-datagen-serverless:latest
+
+      - name: Build and push (orchestrator)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.orchestrator
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/vehicle3d-orchestrator:latest
