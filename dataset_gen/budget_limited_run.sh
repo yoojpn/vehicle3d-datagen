@@ -1,6 +1,11 @@
 #!/bin/bash
 # 指定した時間(秒)が来たら、その時点までの進捗を保存して終了する。
 # 予算(GPU時間)を超えないことを最優先にする設計。
+#
+# 重要: このスクリプト自体のself-terminateとは別に、
+# Runpodのdocker起動コマンド側で「nohup sleep TIME; runpodctl stop pod $RUNPOD_POD_ID」を
+# 並行実行する二重の安全装置を必ず併用すること。
+# (このスクリプト内の処理が予期せず固まっても、確実に時間切れで停止するため)
 TIME_LIMIT_SEC="${TIME_LIMIT_SEC:-32760}"  # デフォルト約9.1時間
 START_IDX="${START_IDX:-0}"
 WORKERS="${WORKERS:-1}"
@@ -41,8 +46,14 @@ if [ -n "${GITHUB_TOKEN}" ]; then
   timeout 20 git push origin main
 fi
 
-# 時間制限で確実に終わらせているので、あとは手動確認で終了する(terminateは呼ばない)
-echo "READY_FOR_MANUAL_TERMINATION" >> /tmp/status.log
-cp /tmp/status.log "/workspace/repo/${LOG_FILE}" 2>/dev/null
-cd /workspace/repo && git add "${LOG_FILE}" 2>/dev/null && git commit -m "final ${POD_TAG}" 2>/dev/null; timeout 20 git push origin main 2>/dev/null
-sleep 60
+# push完了後、確実にself-terminateする(セッション切れ対策として必須)
+sleep 5
+echo "attempting self-terminate: POD_ID=${RUNPOD_POD_ID}" >> /tmp/status.log
+if [ -n "${RUNPOD_API_KEY}" ] && [ -n "${RUNPOD_POD_ID}" ]; then
+  cat > /tmp/terminate_query.json << EOF
+{"query": "mutation { podTerminate(input: {podId: \"${RUNPOD_POD_ID}\"}) }"}
+EOF
+  curl -s -m 20 -X POST "https://api.runpod.io/graphql?api_key=${RUNPOD_API_KEY}" \
+    -H "Content-Type: application/json" \
+    --data @/tmp/terminate_query.json
+fi
