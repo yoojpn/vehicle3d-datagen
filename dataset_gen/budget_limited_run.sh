@@ -44,6 +44,19 @@ if [ -n "${GITHUB_TOKEN}" ]; then
   timeout 15 git commit -m "budget run ${POD_TAG}"
   timeout 20 git pull --no-edit origin main
   timeout 20 git push origin main
+
+  # push成功を実際にGitHub API経由で確認する(確認できるまで最大3回リトライ)
+  PUSH_CONFIRMED=0
+  for check in 1 2 3; do
+    sleep 5
+    RESP=$(curl -s -m 15 -H "Authorization: token ${GITHUB_TOKEN}" \
+      "https://api.github.com/repos/yoojpn/vehicle3d-datagen/contents/${LOG_FILE}")
+    if echo "$RESP" | grep -q '"content"'; then
+      PUSH_CONFIRMED=1
+      break
+    fi
+  done
+  echo "push_confirmed=${PUSH_CONFIRMED}" >> /tmp/status.log
 fi
 
 # push完了後、確実にself-terminateする(セッション切れ対策として必須)
