@@ -1,0 +1,21 @@
+=== BUDGET-LIMITED RUN: time_limit=300s ===
+start=1786141713
+loaded 188 templates
+prepared 200000 operation sequences
+split into 10000 chunks of up to 20 items each
+progress: 20/200000 (0.0%)  ok=20 fail=0  elapsed=18s  eta=184876s
+progress: 40/200000 (0.0%)  ok=40 fail=0  elapsed=34s  eta=172060s
+progress: 60/200000 (0.0%)  ok=60 fail=0  elapsed=50s  eta=165408s
+progress: 80/200000 (0.0%)  ok=80 fail=0  elapsed=65s  eta=161696s
+progress: 100/200000 (0.1%)  ok=100 fail=0  elapsed=80s  eta=160178s
+progress: 120/200000 (0.1%)  ok=120 fail=0  elapsed=95s  eta=158206s
+progress: 140/200000 (0.1%)  ok=140 fail=0  elapsed=111s  eta=158402s
+progress: 160/200000 (0.1%)  ok=160 fail=0  elapsed=127s  eta=158788s
+progress: 180/200000 (0.1%)  ok=180 fail=0  elapsed=143s  eta=159045s
+progress: 200/200000 (0.1%)  ok=200 fail=0  elapsed=160s  eta=159722s
+progress: 220/200000 (0.1%)  ok=220 fail=0  elapsed=177s  eta=160636s
+progress: 240/200000 (0.1%)  ok=240 fail=0  elapsed=192s  eta=159755s
+progress: 260/200000 (0.1%)  ok=260 fail=0  elapsed=208s  eta=159445s
+=== TIME LIMIT REACHED OR RUN COMPLETED ===
+end=1786142013
+completed_count=266
