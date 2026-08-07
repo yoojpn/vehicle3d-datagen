@@ -35,6 +35,39 @@ echo "end=$(date +%s)" >> /tmp/status.log
 COMPLETED=$(find "${OUT_DIR}/rendered" -name "mesh.glb" 2>/dev/null | wc -l)
 echo "completed_count=${COMPLETED}" >> /tmp/status.log
 
+# 生成物本体(画像・GLB)をzip化してGitHub Releaseとしてアップロードする
+# (これがないと、ログだけ残ってデータ本体が消える問題が再発するため必須)
+DATASET_ZIP="/tmp/dataset_${POD_TAG}.zip"
+echo "zipping dataset..." >> /tmp/status.log
+cd "${OUT_DIR}" && zip -qr "${DATASET_ZIP}" ops rendered 2>>/tmp/status.log
+echo "zip_size=$(du -h ${DATASET_ZIP} 2>/dev/null | cut -f1)" >> /tmp/status.log
+
+if [ -n "${GITHUB_TOKEN}" ]; then
+  # GitHub CLIをインストール(なければ)
+  which gh > /dev/null 2>&1 || (curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg -o /tmp/gh.gpg 2>/dev/null && apt-get install -y gh 2>/dev/null)
+
+  # gh CLIが使えない場合のフォールバック: GitHub API経由でリリース作成+アセットアップロード
+  RELEASE_TAG="dataset-${POD_TAG}"
+  CREATE_RESP=$(curl -s -m 30 -X POST \
+    -H "Authorization: token ${GITHUB_TOKEN}" \
+    -H "Content-Type: application/json" \
+    "https://api.github.com/repos/yoojpn/vehicle3d-datagen/releases" \
+    -d "{\"tag_name\": \"${RELEASE_TAG}\", \"name\": \"Dataset ${POD_TAG}\", \"body\": \"completed_count=${COMPLETED}\"}")
+  UPLOAD_URL=$(echo "$CREATE_RESP" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('upload_url','').split('{')[0])" 2>/dev/null)
+  echo "release_upload_url=${UPLOAD_URL}" >> /tmp/status.log
+
+  if [ -n "${UPLOAD_URL}" ]; then
+    UPLOAD_RESP=$(curl -s -m 300 -X POST \
+      -H "Authorization: token ${GITHUB_TOKEN}" \
+      -H "Content-Type: application/zip" \
+      --data-binary "@${DATASET_ZIP}" \
+      "${UPLOAD_URL}?name=dataset_${POD_TAG}.zip")
+    echo "upload_confirmed=$(echo "$UPLOAD_RESP" | grep -q '"browser_download_url"' && echo 1 || echo 0)" >> /tmp/status.log
+  else
+    echo "upload_confirmed=0_no_upload_url" >> /tmp/status.log
+  fi
+fi
+
 if [ -n "${GITHUB_TOKEN}" ]; then
   cp /tmp/status.log "/workspace/repo/${LOG_FILE}"
   git config user.email "pod@local"
