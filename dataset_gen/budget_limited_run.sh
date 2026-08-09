@@ -1,12 +1,9 @@
 #!/bin/bash
-# 指定した時間(秒)が来たら、その時点までの進捗を保存して終了する。
-# 予算(GPU時間)を超えないことを最優先にする設計。
-#
-# 重要: このスクリプト自体のself-terminateとは別に、
-# Runpodのdocker起動コマンド側で「nohup sleep TIME; runpodctl stop pod $RUNPOD_POD_ID」を
-# 並行実行する二重の安全装置を必ず併用すること。
-# (このスクリプト内の処理が予期せず固まっても、確実に時間切れで停止するため)
-TIME_LIMIT_SEC="${TIME_LIMIT_SEC:-32760}"  # デフォルト約9.1時間
+# 前回までの失敗(件数を大きくしすぎ、zip化・アップロードの後処理時間を
+# 見積もらないままtimeoutを設定していたため、データが失われた)を踏まえ、
+# 件数を最初から小さく固定し、後処理の時間まで含めて確実に収まる設計にする。
+NUM_SAMPLES="${NUM_SAMPLES:-3000}"  # 1回のポッドで処理する固定件数(後処理時間を確実に見積もれる規模)
+RENDER_TIMEOUT_SEC="${RENDER_TIMEOUT_SEC:-5400}"  # レンダリング自体の上限(90分、3000件なら十分な余裕)
 START_IDX="${START_IDX:-0}"
 WORKERS="${WORKERS:-1}"
 GITHUB_TOKEN="${GITHUB_TOKEN}"
@@ -16,13 +13,12 @@ LOG_FILE="pod_budget_${POD_TAG}.log"
 
 cd /workspace/repo
 
-echo "=== BUDGET-LIMITED RUN: time_limit=${TIME_LIMIT_SEC}s ===" > /tmp/status.log
+echo "=== FIXED-COUNT RUN: ${NUM_SAMPLES} samples, render_timeout=${RENDER_TIMEOUT_SEC}s ===" > /tmp/status.log
 echo "start=$(date +%s)" >> /tmp/status.log
 
-# バックグラウンドで大きめの件数(時間内で終わらない前提の上限)を投げ、
-# タイムアウトコマンドで強制的に時間内に収める
-timeout "${TIME_LIMIT_SEC}" python3 dataset_gen/run_batch.py \
-  --start "${START_IDX}" --end "$((START_IDX + 200000))" \
+# 件数を固定し、レンダリング部分にだけtimeoutをかける(後処理はtimeoutの外)
+timeout "${RENDER_TIMEOUT_SEC}" python3 dataset_gen/run_batch.py \
+  --start "${START_IDX}" --end "$((START_IDX + NUM_SAMPLES))" \
   --workers "${WORKERS}" \
   --templates dataset_gen/structure_templates_300_v2.json \
   --ops_dir "${OUT_DIR}/ops" \
