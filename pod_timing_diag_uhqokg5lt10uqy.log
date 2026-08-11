@@ -1,0 +1,64 @@
+=== TIMING DIAGNOSTIC (no blender render) ===
+start_time=1786442859
+checking repo state...
+total 272
+drwxr-xr-x 1 root root    25 Aug 11 09:13 .
+drwxr-xr-x 1 root root    18 Aug 11 09:13 ..
+drwxr-xr-x 8 root root   163 Aug 11 09:13 .git
+drwxr-xr-x 3 root root    23 Aug 11 09:13 .github
+-rw-r--r-- 1 root root  1220 Aug 11 09:13 Dockerfile
+-rw-r--r-- 1 root root   302 Aug 11 09:13 Dockerfile.orchestrator
+-rw-r--r-- 1 root root  1316 Aug 11 09:13 Dockerfile.serverless
+-rw-r--r-- 1 root root  2354 Aug 11 09:13 colab_one_click.ipynb
+drwxr-xr-x 1 root root    35 Aug 11 09:13 dataset_gen
+-rw-r--r-- 1 root root  1140 Aug 11 09:13 pod_budget_4b9r8yo5od7t6u.log
+-rw-r--r-- 1 root root 10541 Aug 11 09:13 pod_budget_5kxd7t66xtna1y.log
+-rw-r--r-- 1 root root  1001 Aug 11 09:13 pod_budget_a361mbvfmw0rpa.log
+-rw-r--r-- 1 root root  7884 Aug 11 09:13 pod_budget_c1d8eyofb66llz.log
+-rw-r--r-- 1 root root 92766 Aug 11 09:13 pod_budget_c5b71n2y9w3hpm.log
+-rw-r--r-- 1 root root   243 Aug 11 09:13 pod_budget_egd90u1x15sxtk.log
+-rw-r--r-- 1 root root 93449 Aug 11 09:13 pod_budget_uay9on9pbprggc.log
+-rw-r--r-- 1 root root 10573 Aug 11 09:13 pod_budget_wdk3ez7u9ctxro.log
+-rw-r--r-- 1 root root 10525 Aug 11 09:13 pod_budget_ynjhi28uhrbv6f.log
+-rw-r--r-- 1 root root   557 Aug 11 09:13 pod_isolated_y2xc6f4rhfb40g.log
+-rw-r--r-- 1 root root   239 Aug 11 09:13 pod_status.log
+-rw-r--r-- 1 root root   281 Aug 11 09:13 pod_status_wwwyw41zuedxvk.log
+-rw-r--r-- 1 root root  3803 Aug 11 09:13 pod_timing_diag_cc2cgy1xbq4fij.log
+python3 check:
+Python 3.10.12
+blender check:
+Blender 5.2.0 LTS
+	build date: 2026-07-14
+	build time: 01:32:04
+	build commit date: 2026-07-13
+	build commit time: 15:20
+	build hash: fbe6228777e7
+	build branch: blender-v5.2-release
+	build platform: Linux
+	build type: Release
+	build c flags:  -Wall -Werror=implicit-function-declaration -Wstrict-prototypes -Werror=return-type -Werror=vla -Wmissing-prototypes -Wno-char-subscripts -Wno-unknown-pragmas -Wpointer-arith -Wunused-parameter -Wwrite-strings -Wlogical-op -Wundef -Winit-self -Wmissing-include-dirs -Wno-div-by-zero -Wtype-limits -Wformat-signedness -Wrestrict -Wno-stringop-overread -Wno-stringop-overflow -Wnonnull -Wabsolute-value -Wuninitialized -Wredundant-decls -Wshadow -Wimplicit-fallthrough=5 -Wno-error=unused-but-set-variable  -march=x86-64-v2 -std=gnu11 -pipe -fPIC -funsigned-char -fno-strict-aliasing -ffp-contract=off  
+	build c++ flags:  -Wuninitialized -Wredundant-decls -Wall -Wno-invalid-offsetof -Wno-sign-compare -Wlogical-op -Winit-self -Wmissing-include-dirs -Wno-div-by-zero -Wtype-limits -Werror=return-type -Wno-char-subscripts -Wno-unknown-pragmas -Wpointer-arith -Wunused-parameter -Wwrite-strings -Wundef -Wcomma-subscript -Wformat-signedness -Wrestrict -Wno-suggest-override -Wuninitialized -Wno-stringop-overread -Wno-stringop-overflow -Wimplicit-fallthrough=5 -Wundef -Wmissing-declarations  -march=x86-64-v2 -pipe -fPIC -funsigned-char -fno-strict-aliasing -ffp-contract=off  
+	build link flags: 
+	build system: CMake
+nvidia-smi check:
+Tue Aug 11 10:07:39 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 550.127.05             Driver Version: 550.127.05     CUDA Version: 12.4     |
+|-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA RTX A2000               On  |   00000000:04:00.0 Off |                  Off |
+| 30%   53C    P8             14W /   70W |       2MiB /   6138MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+                                                                                         
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI        PID   Type   Process name                              GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+end_time=1786442860
