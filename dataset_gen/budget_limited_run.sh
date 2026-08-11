@@ -27,6 +27,12 @@ timeout "${RENDER_TIMEOUT_SEC}" python3 dataset_gen/run_batch.py \
 echo "=== TIME LIMIT REACHED OR RUN COMPLETED ===" >> /tmp/status.log
 echo "end=$(date +%s)" >> /tmp/status.log
 
+# 複数ポッド並列実行時、git pushが同時に競合するのを避けるため、
+# 後処理開始前にランダムな遅延(0〜60秒)を入れる
+STAGGER=$((RANDOM % 60))
+echo "stagger_delay=${STAGGER}s" >> /tmp/status.log
+sleep "${STAGGER}"
+
 # 完了した件数を数える
 COMPLETED=$(find "${OUT_DIR}/rendered" -name "mesh.glb" 2>/dev/null | wc -l)
 echo "completed_count=${COMPLETED}" >> /tmp/status.log
@@ -38,9 +44,14 @@ if [ -n "${GITHUB_TOKEN}" ]; then
   git config user.name "pod-runner"
   git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/yoojpn/vehicle3d-datagen.git"
   git add "${LOG_FILE}"
-  timeout 15 git commit -m "budget run ${POD_TAG} (pre-release)"
-  timeout 20 git pull --no-edit origin main
-  timeout 20 git push origin main
+  for attempt in 1 2 3; do
+    timeout 15 git commit -m "budget run ${POD_TAG} (pre-release)"
+    timeout 20 git pull --no-edit origin main
+    if timeout 20 git push origin main; then
+      break
+    fi
+    sleep $((RANDOM % 15 + 5))
+  done
 fi
 
 # 生成物本体(画像・GLB)をzip化してGitHub Releaseとしてアップロードする
