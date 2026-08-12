@@ -90,6 +90,24 @@ def encode_operations(ops):
     return [TOKEN_TO_ID[t] for t in tokens if t in TOKEN_TO_ID]
 
 
+# 操作タイプごとの数値パラメータ名(出現順)。encode_operations側の順序と対応させる。
+PARAM_NAMES_BY_TYPE = {
+    "bevel": ["width", "segments"],
+    "taper": ["factor"],
+    "subdivide": ["levels"],
+    "mirror": [],
+    "array": [],
+    "bend": ["angle"],
+    "twist": ["angle"],
+    "shear": ["factor"],
+    "solidify": ["thickness"],
+    "displace": ["strength"],
+    "remesh": ["voxel_size"],
+    "decimate": ["ratio"],
+    "smooth": ["factor", "iterations"],
+}
+
+
 def decode_operations(token_ids):
     """encode_operationsの逆変換。トークンID列から操作列(dictのリスト)を復元する。
     推論結果を実際にBlenderで組み立てるために必要。"""
@@ -130,7 +148,7 @@ def decode_operations(token_ids):
                     i += 1
 
                 ops.append({
-                    "id": op_id, "type": f"add_{op_type}",
+                    "id": op_id, "type": op_type,
                     "params": {"size": size, "position": position}
                 })
             else:
@@ -150,11 +168,21 @@ def decode_operations(token_ids):
                         params["axis"] = t.replace("axis_", "")
                         i += 1
                     elif t.startswith("NUM_"):
-                        # 汎用の数値パラメータ(操作タイプごとの意味は失われるが、復元は試みる)
-                        params.setdefault("values", []).append(dequantize(t))
+                        param_names = PARAM_NAMES_BY_TYPE.get(op_type, [])
+                        collected = params.setdefault("_values", [])
+                        collected.append(dequantize(t))
+                        idx = len(collected) - 1
+                        if idx < len(param_names):
+                            key = param_names[idx]
+                            val = collected[-1]
+                            # segments/levels/iterationsは整数値にする
+                            if key in ("segments", "levels", "iterations"):
+                                val = max(1, int(round(val)))
+                            params[key] = val
                         i += 1
                     else:
                         break
+                params.pop("_values", None)
                 op_entry = {"id": f"op{op_type}_{len(ops)}", "type": op_type, "params": params}
                 if target_id:
                     op_entry["target"] = target_id
