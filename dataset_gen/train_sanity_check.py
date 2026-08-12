@@ -24,22 +24,33 @@ from op_tokenizer import encode_operations, VOCAB_SIZE, TOKEN_TO_ID
 
 
 class VehicleDataset(Dataset):
-    def __init__(self, data_dir, ops_dir, image_size=224, max_len=256):
+    def __init__(self, dataset_dirs, image_size=224, max_len=256):
+        """
+        dataset_dirs: 各Releaseを展開したディレクトリのリスト。
+        各ディレクトリの中に ops/ と rendered/ サブディレクトリがある前提
+        (merge_dataset.shで1箇所にまとめる代わりに、複数箇所を横断して読む設計。
+        大量ファイルのcpコピーでポッドがハングした問題を避けるため)。
+        """
         self.samples = []
         self.image_size = image_size
         self.max_len = max_len
 
-        sample_dirs = sorted(glob.glob(os.path.join(data_dir, "*")))
-        for d in sample_dirs:
-            if not os.path.isdir(d):
+        for base_dir in dataset_dirs:
+            data_dir = os.path.join(base_dir, "rendered")
+            ops_dir = os.path.join(base_dir, "ops")
+            if not os.path.isdir(data_dir):
                 continue
-            idx = os.path.basename(d)
-            ops_path = os.path.join(ops_dir, f"ops_{idx}.json")
-            view0_path = os.path.join(d, "view_00.png")
-            if os.path.exists(ops_path) and os.path.exists(view0_path):
-                self.samples.append((view0_path, ops_path))
+            sample_dirs = sorted(glob.glob(os.path.join(data_dir, "*")))
+            for d in sample_dirs:
+                if not os.path.isdir(d):
+                    continue
+                idx = os.path.basename(d)
+                ops_path = os.path.join(ops_dir, f"ops_{idx}.json")
+                view0_path = os.path.join(d, "view_00.png")
+                if os.path.exists(ops_path) and os.path.exists(view0_path):
+                    self.samples.append((view0_path, ops_path))
 
-        print(f"dataset loaded: {len(self.samples)} samples")
+        print(f"dataset loaded: {len(self.samples)} samples from {len(dataset_dirs)} release dirs")
 
     def __len__(self):
         return len(self.samples)
@@ -117,8 +128,8 @@ def count_parameters(model):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data_dir", type=str, required=True)
-    parser.add_argument("--ops_dir", type=str, required=True)
+    parser.add_argument("--dataset_root", type=str, required=True,
+                         help="展開済みRelease群の親ディレクトリ(直下に各release_id/ops, release_id/renderedがある)")
     parser.add_argument("--epochs", type=int, default=30)
     parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--lr", type=float, default=3e-4)
@@ -133,7 +144,10 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"device: {device}")
 
-    full_dataset = VehicleDataset(args.data_dir, args.ops_dir, max_len=args.max_len)
+    dataset_dirs = sorted(glob.glob(os.path.join(args.dataset_root, "*")))
+    dataset_dirs = [d for d in dataset_dirs if os.path.isdir(d)]
+    print(f"found {len(dataset_dirs)} release directories under {args.dataset_root}")
+    full_dataset = VehicleDataset(dataset_dirs, max_len=args.max_len)
     val_size = int(len(full_dataset) * args.val_ratio)
     train_size = len(full_dataset) - val_size
     generator = torch.Generator().manual_seed(42)  # 毎回同じ分割になるよう固定
