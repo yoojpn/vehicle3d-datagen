@@ -39,3 +39,13 @@ done < release_urls.txt
 
 FINAL_COUNT=$(find "${MERGED_DIR}/rendered" -name "mesh.glb" | wc -l)
 echo "=== MERGE DONE: ${FINAL_COUNT} samples in ${MERGED_DIR} ==="
+
+# 統合完了後、自己終了する
+if [ -n "${RUNPOD_API_KEY}" ] && [ -n "${RUNPOD_POD_ID}" ]; then
+  cat > /tmp/terminate_query.json << EOF
+{"query": "mutation { podTerminate(input: {podId: \"${RUNPOD_POD_ID}\"}) }"}
+EOF
+  curl -s -m 20 -X POST "https://api.runpod.io/graphql?api_key=${RUNPOD_API_KEY}" \
+    -H "Content-Type: application/json" \
+    --data @/tmp/terminate_query.json
+fi
