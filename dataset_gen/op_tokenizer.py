@@ -90,6 +90,81 @@ def encode_operations(ops):
     return [TOKEN_TO_ID[t] for t in tokens if t in TOKEN_TO_ID]
 
 
+def decode_operations(token_ids):
+    """encode_operationsの逆変換。トークンID列から操作列(dictのリスト)を復元する。
+    推論結果を実際にBlenderで組み立てるために必要。"""
+    tokens = [ID_TO_TOKEN.get(t) for t in token_ids]
+    ops = []
+    add_count = 0
+    id_by_position = {}  # add操作の通し番号 -> 生成したop_id
+
+    i = 0
+    while i < len(tokens):
+        tok = tokens[i]
+        if tok is None or tok in ("<start>", "<pad>"):
+            i += 1
+            continue
+        if tok == "<end>":
+            break
+        if tok == "<sep>":
+            i += 1
+            continue
+
+        if tok.startswith("OP_"):
+            op_type = tok[3:]
+            i += 1
+            if op_type.startswith("add_"):
+                op_id = f"op{add_count}"
+                id_by_position[add_count] = op_id
+                add_count += 1
+
+                size = []
+                while i < len(tokens) and tokens[i] and tokens[i].startswith("NUM_"):
+                    size.append(dequantize(tokens[i]))
+                    i += 1
+                if i < len(tokens) and tokens[i] == "<sep>":
+                    i += 1
+                position = []
+                while i < len(tokens) and tokens[i] and tokens[i].startswith("NUM_"):
+                    position.append(dequantize(tokens[i]))
+                    i += 1
+
+                ops.append({
+                    "id": op_id, "type": f"add_{op_type}",
+                    "params": {"size": size, "position": position}
+                })
+            else:
+                # 変形操作: TARGET_REL, 数値パラメータ, axisトークンが続く可能性がある
+                target_id = None
+                params = {}
+                while i < len(tokens) and tokens[i] not in ("<sep>", "<end>", None):
+                    t = tokens[i]
+                    if t == "TARGET_REL":
+                        i += 1
+                        if i < len(tokens) and tokens[i] and tokens[i].startswith("NUM_"):
+                            rel = int(round(dequantize(tokens[i])))
+                            target_pos = add_count - 1 - rel
+                            target_id = id_by_position.get(target_pos)
+                            i += 1
+                    elif t.startswith("axis_"):
+                        params["axis"] = t.replace("axis_", "")
+                        i += 1
+                    elif t.startswith("NUM_"):
+                        # 汎用の数値パラメータ(操作タイプごとの意味は失われるが、復元は試みる)
+                        params.setdefault("values", []).append(dequantize(t))
+                        i += 1
+                    else:
+                        break
+                op_entry = {"id": f"op{op_type}_{len(ops)}", "type": op_type, "params": params}
+                if target_id:
+                    op_entry["target"] = target_id
+                ops.append(op_entry)
+        else:
+            i += 1
+
+    return ops
+
+
 if __name__ == "__main__":
     print(f"vocab size: {VOCAB_SIZE}")
     sample = {

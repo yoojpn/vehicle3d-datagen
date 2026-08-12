@@ -28,7 +28,7 @@ ENV PATH="/opt/blender-5.2.0-linux-x64:${PATH}"
 RUN pip3 install --no-cache-dir runpod trimesh numpy torch pillow "numpy<2"
 
 RUN git clone https://github.com/yoojpn/vehicle3d-datagen.git /workspace/repo
-RUN chmod +x /workspace/repo/dataset_gen/pod_run_and_terminate.sh /workspace/repo/dataset_gen/minimal_terminate_test.sh /workspace/repo/dataset_gen/timing_diagnostic.sh /workspace/repo/dataset_gen/isolated_render_test.sh /workspace/repo/dataset_gen/budget_limited_run.sh /workspace/repo/dataset_gen/safety_net_terminate.sh /workspace/repo/dataset_gen/entrypoint_with_safety.sh /workspace/repo/dataset_gen/merge_dataset.sh /workspace/repo/dataset_gen/prepare_dataset_dirs.sh /workspace/repo/dataset_gen/run_training.sh
+RUN chmod +x /workspace/repo/dataset_gen/pod_run_and_terminate.sh /workspace/repo/dataset_gen/minimal_terminate_test.sh /workspace/repo/dataset_gen/timing_diagnostic.sh /workspace/repo/dataset_gen/isolated_render_test.sh /workspace/repo/dataset_gen/budget_limited_run.sh /workspace/repo/dataset_gen/safety_net_terminate.sh /workspace/repo/dataset_gen/entrypoint_with_safety.sh /workspace/repo/dataset_gen/merge_dataset.sh /workspace/repo/dataset_gen/prepare_dataset_dirs.sh /workspace/repo/dataset_gen/run_training.sh /workspace/repo/dataset_gen/run_inference_test.sh
 
 WORKDIR /workspace
 COPY dataset_gen/serverless_handler.py /workspace/repo/dataset_gen/serverless_handler.py
