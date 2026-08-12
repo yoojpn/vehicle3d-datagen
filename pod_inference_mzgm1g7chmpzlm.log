@@ -1,0 +1,33 @@
+=== INFERENCE TEST START ===
+model downloaded
+test data downloaded
+test_image=/tmp/test_data/rendered/970000/view_00.png
+/usr/local/lib/python3.10/dist-packages/torch/cuda/__init__.py:188: UserWarning: CUDA initialization: CUDA unknown error - this may be due to an incorrectly set up environment, e.g. changing env variable CUDA_VISIBLE_DEVICES after program start. Setting the available devices to be zero. (Triggered internally at /__w/pytorch/pytorch/c10/cuda/CUDAFunctions.cpp:119.)
+  return torch._C._cuda_getDeviceCount() > 0
+device: cpu
+model loaded
+generated tokens:
+<start> OP_add_sphere NUM_120 NUM_120 NUM_120 <sep> NUM_60 NUM_60 NUM_120 <sep> OP_bevel TARGET_REL NUM_60 NUM_61 NUM_120 <sep> OP_add_box NUM_120 NUM_120 NUM_120 <sep> NUM_60 NUM_60 NUM_120 <sep> OP_bevel TARGET_REL NUM_60 NUM_61 NUM_120 <sep> OP_add_cone NUM_120 NUM_120 NUM_120 <sep> NUM_60 NUM_60 NUM_120 <sep> OP_bevel TARGET_REL NUM_60 NUM_61 NUM_120 <sep> OP_add_cone NUM_92 NUM_92 NUM_92 <sep> NUM_76 NUM_73 NUM_76 <sep> OP_bevel TARGET_REL NUM_60 NUM_61 NUM_120 <sep> OP_add_wedge NUM_76 NUM_77 NUM_74 <sep> NUM_56 NUM_61 NUM_88 <sep> <end>
+decoded 9 operations, saved to /tmp/generated_ops.json
+saved to /tmp/generated.txt
+=== INFERENCE DONE ===
+<start> OP_add_sphere NUM_120 NUM_120 NUM_120 <sep> NUM_60 NUM_60 NUM_120 <sep> OP_bevel TARGET_REL NUM_60 NUM_61 NUM_120 <sep> OP_add_box NUM_120 NUM_120 NUM_120 <sep> NUM_60 NUM_60 NUM_120 <sep> OP_bevel TARGET_REL NUM_60 NUM_61 NUM_120 <sep> OP_add_cone NUM_120 NUM_120 NUM_120 <sep> NUM_60 NUM_60 NUM_120 <sep> OP_bevel TARGET_REL NUM_60 NUM_61 NUM_120 <sep> OP_add_cone NUM_92 NUM_92 NUM_92 <sep> NUM_76 NUM_73 NUM_76 <sep> OP_bevel TARGET_REL NUM_60 NUM_61 NUM_120 <sep> OP_add_wedge NUM_76 NUM_77 NUM_74 <sep> NUM_56 NUM_61 NUM_88 <sep> <end>
+[1, 6, 146, 146, 146, 3, 86, 86, 146, 3, 11, 150, 86, 87, 146, 3, 4, 146, 146, 146, 3, 86, 86, 146, 3, 11, 150, 86, 87, 146, 3, 7, 146, 146, 146, 3, 86, 86, 146, 3, 11, 150, 86, 87, 146, 3, 7, 118, 118, 118, 3, 102, 99, 102, 3, 11, 150, 86, 87, 146, 3, 9, 102, 103, 100, 3, 82, 87, 114, 3, 2]00:01.577  cycles           | ERROR CUDA cuInit: Unknown error
+00:01.577  cycles           | WARNING OptiX initialization failed with error code 7804
+00:01.577  cycles           | WARNING HIPEW initialization failed: Error opening HIP dynamic library
+GPU device enabled: AMD EPYC 7443 24-Core Processor (CPU)
+WARNING: unknown op type add_add_sphere, skipping
+WARNING: failed op opbevel_1 (bevel): 'op0'
+WARNING: unknown op type add_add_box, skipping
+WARNING: failed op opbevel_3 (bevel): 'op1'
+WARNING: unknown op type add_add_cone, skipping
+WARNING: failed op opbevel_5 (bevel): 'op2'
+WARNING: unknown op type add_add_cone, skipping
+WARNING: failed op opbevel_7 (bevel): 'op3'
+WARNING: unknown op type add_add_wedge, skipping
+ERROR: no mesh produced for /tmp/generated_ops.json
+Blender 5.2.0 LTS (hash fbe6228777e7 built 2026-07-14 01:32:04)
+
+Blender quit
+=== RENDER DONE ===
+zip_exit_code=0
