@@ -3,6 +3,7 @@
 POD_TAG="${RUNPOD_POD_ID:-unknown_$(date +%s)}"
 LOG_FILE="pod_train_${POD_TAG}.log"
 GITHUB_TOKEN="${GITHUB_TOKEN}"
+BATCH_SIZE="${BATCH_SIZE:-16}"
 EPOCHS="${EPOCHS:-30}"
 
 cd /workspace/repo
@@ -16,7 +17,7 @@ echo "=== DATASET PREPARED ===" >> /tmp/status.log
 cd dataset_gen
 python3 train_sanity_check.py \
   --dataset_root /workspace/dataset_root \
-  --epochs "${EPOCHS}" --batch_size 16 --val_ratio 0.1 \
+  --epochs "${EPOCHS}" --batch_size "${BATCH_SIZE}" --val_ratio 0.1 \
   --out_dir /workspace/train_output >> /tmp/status.log 2>&1
 
 echo "=== TRAINING DONE ===" >> /tmp/status.log
