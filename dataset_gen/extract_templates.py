@@ -57,7 +57,8 @@ def extract_template(mesh_path, uid):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--target_count", type=int, default=2000)
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--offset", type=int, default=0, help="全体シャッフル後、この位置からtarget_count件を取る(並列実行時の重複回避用)")
     parser.add_argument("--existing_templates", type=str, required=True)
     parser.add_argument("--out", type=str, default="/tmp/structure_templates_expanded.json")
     args = parser.parse_args()
@@ -75,9 +76,11 @@ def main():
                 filtered_uids.append(uid)
     print(f"license-clean count: {len(filtered_uids)}", flush=True)
 
-    random.seed(42)
-    sample_uids = random.sample(filtered_uids, min(args.target_count, len(filtered_uids)))
-    print(f"sampled: {len(sample_uids)}", flush=True)
+    random.seed(args.seed)
+    shuffled = filtered_uids.copy()
+    random.shuffle(shuffled)
+    sample_uids = shuffled[args.offset: args.offset + args.target_count]
+    print(f"sampled: {len(sample_uids)} (offset={args.offset})", flush=True)
 
     print("downloading objects...", flush=True)
     objects = objaverse.load_objects(uids=sample_uids, download_processes=min(8, multiprocessing.cpu_count()))

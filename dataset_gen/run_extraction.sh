@@ -3,6 +3,7 @@ POD_TAG="${RUNPOD_POD_ID:-unknown_$(date +%s)}"
 LOG_FILE="pod_extract_${POD_TAG}.log"
 GITHUB_TOKEN="${GITHUB_TOKEN}"
 TARGET_COUNT="${TARGET_COUNT:-2000}"
+OFFSET="${OFFSET:-0}"
 
 cd /workspace/repo
 echo "=== TEMPLATE EXTRACTION START ===" > /tmp/status.log
@@ -13,6 +14,7 @@ pip install --break-system-packages --quiet objaverse trimesh numpy >> /tmp/stat
 cd dataset_gen
 python3 extract_templates.py \
   --target_count "${TARGET_COUNT}" \
+  --offset "${OFFSET}" \
   --existing_templates structure_templates_300_v2.json \
   --out /tmp/structure_templates_expanded.json >> /tmp/status.log 2>&1
 
